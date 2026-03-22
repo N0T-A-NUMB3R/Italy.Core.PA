@@ -1,19 +1,18 @@
 # Italy.Core.PA
 
-> Estensione di [Italy.Core](https://github.com/N0T-A-NUMB3R/Italy.Core) per il catalogo delle Pubbliche Amministrazioni italiane.
-
 [![NuGet](https://img.shields.io/nuget/v/Italy.Core.PA)](https://www.nuget.org/packages/Italy.Core.PA)
 [![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%20Framework%204.8-blueviolet)](https://dotnet.microsoft.com)
 [![Licenza](https://img.shields.io/badge/licenza-MIT-green)](LICENSE)
 
+> Spinoff di [Italy.Core](https://github.com/N0T-A-NUMB3R/Italy.Core) — catalogo delle Pubbliche Amministrazioni italiane in tempo reale.
+
 ---
 
-## Panoramica
+## Cos'è
 
-**Italy.Core.PA** aggiunge a Italy.Core l'accesso in tempo reale al catalogo **IndicePA**
-(Indice delle Pubbliche Amministrazioni), la fonte ufficiale italiana per:
+**Italy.Core.PA** è un pacchetto autonomo che aggiunge l'accesso live al catalogo **IndicePA** (Indice delle Pubbliche Amministrazioni), la fonte ufficiale italiana per:
 
-- Dati anagrafici di tutte le PA italiane (Ministeri, Regioni, Comuni, ASL, Università, ecc.)
+- Dati anagrafici di tutte le PA italiane (Ministeri, Regioni, Comuni, ASL, Università...)
 - **Codici SdI** (destinatario fattura elettronica B2G) per ogni ufficio PA
 - **PEC ufficiali** per comunicazioni certificate
 - Codici fiscali e siti istituzionali verificati
@@ -22,13 +21,14 @@
 > Licenza dati: **CC BY 4.0**.
 > Fonte: `indicepa.gov.it/ipa-dati/api/3/action/`
 
-A differenza di Italy.Core — che usa dati embedded in SQLite — questo modulo esegue
-**chiamate HTTP live** verso IndicePA per garantire dati sempre aggiornati.
+La differenza rispetto a Italy.Core:
 
-```
-Italy.Core              ←  dati embedded (comuni, province, CF, IBAN...)
-    └── Italy.Core.PA     ←  dati live via API IndicePA (enti, SdI, PEC, CF PA)
-```
+| | Italy.Core | Italy.Core.PA |
+|---|---|---|
+| **Dati** | Embedded SQLite | Live via HTTP (IndicePA) |
+| **Aggiornamento** | Con ogni release NuGet | Ogni chiamata API |
+| **Offline** | Sempre disponibile | Richiede connessione |
+| **Latenza** | Zero (in-process) | ~200–500ms per chiamata |
 
 ---
 
@@ -87,14 +87,12 @@ enti[0].CodiceFiscale;  // "80078750587"
 enti[0].PEC;            // "inps@postacert.inps.gov.it"
 enti[0].SitoWeb;        // "https://www.inps.it"
 enti[0].SiglaProvincia; // "RM"
-enti[0].Regione;        // "Lazio"
 ```
 
 ### Enti per provincia
 
 ```csharp
 var enti = await pa.OttieniEntiIPAPerProvinciaAsync("MI", maxRisultati: 50);
-// Tutti gli enti con sede in provincia di Milano
 ```
 
 ### Ricerca per codice fiscale
@@ -114,8 +112,7 @@ ente.PEC;            // "protocollo.dc.segreteria@pec.agenziaentrate.it"
 
 ### Codici SdI per fatturazione elettronica B2G
 
-Il **codice SdI** è il codice a 6-7 caratteri da inserire nel campo `CodiceDestinatario`
-della FatturaPA quando si fattura a una Pubblica Amministrazione.
+Il **codice SdI** è il codice a 6-7 caratteri da inserire nel campo `CodiceDestinatario` della FatturaPA quando si fattura a una Pubblica Amministrazione.
 
 ```csharp
 var enti   = await pa.CercaEnteIPAAsync("Comune di Roma", maxRisultati: 1);
@@ -140,12 +137,10 @@ try
 }
 catch (IndicepaException ex)
 {
+    // Server irraggiungibile, timeout (30s) o risposta non valida
     Console.WriteLine(ex.Message);
-    Console.WriteLine(ex.InnerException?.Message);
 }
 ```
-
-`IndicepaException` viene lanciata in caso di server irraggiungibile, timeout (30s) o risposta non valida.
 
 ---
 
@@ -170,55 +165,45 @@ catch (IndicepaException ex)
 
 ---
 
-## Architettura
+## Struttura
 
 ```
 Italy.Core.PA/
-├── ServiziPAEstesi.cs   # Client IndicePA: ricerca enti, SdI, parsing CKAN JSON
-│                        # Domain: EnteIPA, CodiceDestinatarioSdI, IndicepaException, TipoEnteIPA
+├── ServiziPAEstesi.cs     # Client IndicePA: ricerca enti, SdI, parsing CKAN JSON
+│                          # Domain: EnteIPA, CodiceDestinatarioSdI, TipoEnteIPA...
+├── Italy.Core.PA.csproj
 └── README.md
 ```
-
-### Perché un pacchetto separato?
-
-| | Italy.Core | Italy.Core.PA |
-|---|---|---|
-| **Dati** | Embedded SQLite | Live via HTTP (IndicePA) |
-| **Aggiornamento** | Con ogni release NuGet | Ogni chiamata API |
-| **Offline** | Sempre disponibile | Richiede connessione |
-| **Latenza** | Zero (in-process) | ~200–500 ms per chiamata |
 
 ---
 
 ## Compatibilità
 
-| Framework | Linguaggio | Note |
-|---|---|---|
-| `.NET 8.0` | C# 12 | Feature set completo |
-| `.NET Framework 4.8` | C# 7.3 | PolySharp backport |
+| Framework | Linguaggio |
+|---|---|
+| `.NET 8.0` | C# 12 |
+| `.NET Framework 4.8` | C# 7.3 |
 
 ---
 
 ## Dipendenze
 
-| Pacchetto | net8 | net48 | Scopo |
-|---|---|---|---|
-| `Italy.Core` | ≥1.0.0 | ≥1.0.0 | `ServiziComuni` per lookup comuni |
-| `Microsoft.Extensions.Http` | 8.0.0 | 6.0.0 | HttpClient factory |
-| `System.Text.Json` | 8.0.5 | 6.0.10 | Parsing JSON IndicePA |
-| `PolySharp` | — | 1.14.1 | Backport su net48 |
+| Pacchetto | net8 | net48 |
+|---|---|---|
+| `Italy.Core` | ≥1.0.0 | ≥1.0.0 |
+| `Microsoft.Extensions.Http` | 8.0.0 | 6.0.0 |
+| `System.Text.Json` | 8.0.5 | 6.0.10 |
+| `PolySharp` | — | 1.14.1 |
 
 ---
 
-## Ecosistema Italy.Core
+## Famiglia Italy.Core
 
-| Pacchetto | Descrizione |
-|---|---|
-| `Italy.Core` | Comuni, province, CF, P.IVA, IBAN, ATECO, banche — embedded |
-| `Italy.Automotive` | Targhe, RCA, revisioni, bollo, Fringe Benefit ACI |
-| `Italy.Core.ISTAT` | Popolazione, inflazione, PIL, lavoro — live ISTAT |
-| **`Italy.Core.PA`** | **Catalogo IPA, SdI B2G, PEC ufficiali — live IndicePA** |
-| `Italy.Core.Finance` | *(coming soon)* Aliquote IVA, ZFU/ZES, incentivi fiscali |
+| Pacchetto | Repository | Descrizione |
+|---|---|---|
+| `Italy.Core` | [GitHub](https://github.com/N0T-A-NUMB3R/Italy.Core) | Libreria base — comuni, CF, IBAN, ATECO, banche, farmacie, rifiuti |
+| `Italy.Core.ISTAT` | [GitHub](https://github.com/N0T-A-NUMB3R/Italy.Core.ISTAT) | Statistiche live ISTAT — popolazione, inflazione, PIL, lavoro |
+| **`Italy.Core.PA`** | **questo repo** | **Catalogo PA live — IndicePA, SdI B2G, PEC ufficiali** |
 
 ---
 
@@ -226,4 +211,4 @@ Italy.Core.PA/
 
 MIT — vedi [LICENSE](LICENSE).
 
-I dati IndicePA sono distribuiti con licenza **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
+*Dati IndicePA distribuiti con licenza Creative Commons Attribution 4.0 International (CC BY 4.0).*

@@ -6,6 +6,9 @@
 
 > Spinoff di [Italy.Core](https://github.com/N0T-A-NUMB3R/Italy.Core) — catalogo delle Pubbliche Amministrazioni italiane in tempo reale.
 
+> ⚠️ Pacchetto non ancora pubblicato su NuGet.
+> Clona il repo e aggiungi il riferimento direttamente al progetto.
+
 ---
 
 ## Cos'è
@@ -202,7 +205,7 @@ Italy.Core.PA/
 | Pacchetto | Repository | Descrizione |
 |---|---|---|
 | `Italy.Core` | [GitHub](https://github.com/N0T-A-NUMB3R/Italy.Core) | Libreria base — comuni, CF, IBAN, ATECO, banche, farmacie, rifiuti |
-| `Italy.Core.ISTAT` | [GitHub](https://github.com/N0T-A-NUMB3R/Italy.Core.ISTAT) | Statistiche live ISTAT — popolazione, inflazione, PIL, lavoro |
+| `Italy.Core.ISTAT` | [GitHub](https://github.com/N0T-A-NUMB3R/ItalyCore.ISTAT) | Statistiche live ISTAT — popolazione, inflazione, PIL, lavoro |
 | **`Italy.Core.PA`** | **questo repo** | **Catalogo PA live — IndicePA, SdI B2G, PEC ufficiali** |
 
 ---
